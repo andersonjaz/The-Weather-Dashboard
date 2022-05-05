@@ -2,19 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script src="./script.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Weather DashBoard</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 </head>
-<body>
-    <div id="search-bar">
-    <h2>Search For A City</h2>
-    <input type="text" placeholder="City Name"/>
-    <button id="search">Search</button>
-    </div>
 
-    <div id="current-weather"></div>
-    <div id="future-weather"></div>
+<body>
+    <div class="bg-info">
+        <h1 class="text-center mb-2 p-2 text-dark">Weather Dashboard</h1>
+    </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+                <form class="form">
+                    <div class="input-group m-2 pr-3">
+                        <input type="text" class="form-control" id="citySearch" placeholder="Search for a City">
+                        <div class="input-group-append">
+                            <button class="btn btn-secondary" type="submit" id="citySearchButton"><i class="fas fa-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+                <div class="w-100">
+                    <ul class="list-group listCities mx-2 mt-3"></ul>
+                </div>
+                <div>
+                    <button id="clearCities" type="button" class="btn btn-danger mx-2 mt-3">Clear</button>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="card shadow m-2">
+                    <div class="card-body cityCurrent"></div>
+                </div>
+                <div class="m-2">
+                    <h3>5 Day Forecast</h3>
+                    <div class="forecast row text-light">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" ></script>
+    <script src="./assets/js/weather-script.js"></script>
 </body>
 </html>
