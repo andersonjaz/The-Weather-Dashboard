@@ -1,41 +1,143 @@
-// To Do: Create a website that deploys the weather and next 5 days along with the date, 
-//an icon representation of weather conditions, the temperature, the wind speed, and the humidity
+var listCities = [];;
+var apiKey = "59b8a8c405ff8423f99a6f8cdaf39e42";
 
-//Step 1: Get reference to html that allows us to store variables in js
-var searchBar = document.getElementById("search-bar");
-var currentWeather = document.getElementById("current-weather");
-var futureWeather = document.getElementById("future-weather");
-var searchButton = document.getElementById("search");
-var apiKey = "5f09f28b8ffdecd5f667364795fe43c6";
 
-//Step 2: Make sure search bar has a value entered
- 
-    //Step 2C: make previous city entered still display on our website (local storage)
-    function storeCities() {
-        localStorage.setItem("cities", JSON.stringify(searchBar.value));
+//save city searches in storage
+function storeCities() {
+    localStorage.setItem("cities", JSON.stringify(listCities));
+}
+
+function createCityList(){
+    $(".listCities").empty();
+    listCities.forEach(function(city) {
+        $(".listCities").prepend($(`<button class="list-group-item list-group-item-action cityButton" data-city="${city}">${city}</button>`));
+    })
+}
+
+//load api for specific city and lists city
+function init() {
+    var storedCities = JSON.parse(localStorage.getItem("cities"));
+
+    if (storedCities !== null) {
+        listCities = storedCities;
     }
 
+    createCityList();
 
-//Step 3: Get the dat from the weather website that we need to display on our page
-function getApi(_apiKey) {
-    var getURL= 'https://api.openweathermap.org/data/2.5/onecall?lat=33.44&lon=-94.04&exclude=hourly,daily&appid={5f09f28b8ffdecd5f667364795fe43c6}';
-
-    fetch(getURL)
-    .then(function(response){
-        return response.json();
-    })
-    
-    .then(function(data) {
-        //looping through the fetch url and making responses into list items
-        for (var i = 0; i<5; i++) {
-            //create list
-            var listItem = document.createElement('li');
-            //set text of list element to json response.
-            listItem.textContent = data[i].
-            //apend the list with the parent element
-            futureWeather.appendChild(listItem);
-        }
-    })
-    searchButton.addEventListener('click', getApi);
-    console.log(getURL);
+    if (listCities) {
+        var thisCity = listCities[listCities.length - 1]
+        getCurrentWeather(thisCity, apiKey);
+        getForecast(thisCity, apiKey);
+    }
 }
+
+//api for current city
+function getCurrentWeather(thisCity, apiKey) {
+    var currentURL = `https://api.openweathermap.org/data/2.5/weather?q=${thisCity}&units=imperial&appid=${apiKey}`;
+    var cityLat;
+    var cityLong;
+
+    $.ajax({
+        url: currentURL,
+        method: "GET"
+    }).then(function (data) {
+        $(".cityCurrent").append(
+            `<div class="row ml-1">
+                <h3 class="mr-3">${data.name} (${(new Date(1000 * data.dt).getUTCMonth()) + 1}/${(new Date(1000 * data.dt).getUTCDate()) - 1}/${new Date(1000 * data.dt).getUTCFullYear()})</h3>
+                <img src="http://openweathermap.org/img/w/${data.weather[0].icon}.png">
+            </div>`
+        )
+        $(".cityCurrent").append(`<p>Temperature: ${data.main.temp} &degF</p>`)
+        $(".cityCurrent").append(`<p>Humidity: ${data.main.humidity} %</p>`)
+        $(".cityCurrent").append(`<p>Wind: ${data.wind.speed} mph</p>`)
+        cityLat = data.coord.lat;
+        cityLong = data.coord.lon;
+        getUVI(apiKey, cityLat, cityLong);
+    })
+
+}
+
+
+//get uvi for recent city
+function getUVI(apiKey, cityLat, cityLong) {
+    var uvURL = `https://api.openweathermap.org/data/2.5/uvi?lat=${cityLat}&lon=${cityLong}&appid=${apiKey}`;
+
+    $.ajax({
+        url: uvURL,
+        method: "GET"
+    }).then(function (data) {
+        $(".cityCurrent").append(`<p>UV Index: <span class="badge badge-warning p-2">${data.value}</span></p>`);
+    })
+}
+
+
+//getting forecast for recent city
+
+function getForecast(thisCity, apiKey) {
+    
+    var forecastURL = `https://api.openweathermap.org/data/2.5/forecast?q=${thisCity}&units=metric&appid=${apiKey}`;
+
+    $.ajax({
+        url: forecastURL,
+        method: "GET"
+    }).then(function (data) {
+        
+        for (i = 0; i < data.list.length; i++) {
+            if (data.list[i].dt_txt.search("18:00:00") != -1) {
+                var forecastDate = data.list[i];
+                $(".forecast").append(
+                    `<div class="card bg-primary shadow m-4">
+                        <div class="card-body">
+                            <h4 class="card-title">${(new Date(1000 * forecastDate.dt).getUTCMonth()) + 1}/${new Date(1000 * forecastDate.dt).getUTCDate()}/${new Date(1000 * forecastDate.dt).getUTCFullYear()}</h4>
+                            <div class="card-text">
+                                <img src="http://openweathermap.org/img/w/${forecastDate.weather[0].icon}.png">
+                                <p class="card-text">Temp: ${forecastDate.main.temp} &degC</p>
+                                <p class="card-text">Humidity: ${forecastDate.main.humidity} %</p>
+                            </div>
+                        </div>
+                    </div>`
+                );
+            }
+        }
+
+    })
+}
+
+//retrieve weather and forecast
+
+function displayCityWeather() {
+    var thisCity = $(this).attr("data-city");
+
+    $(".cityCurrent").empty();
+    getCurrentWeather(thisCity, apiKey);
+
+    $(".forecast").empty();
+    getForecast(thisCity, apiKey);
+    
+}
+ 
+
+$(".form").on("submit", function(event) {
+    event.preventDefault();
+    var newCity = $("#citySearch").val().trim();
+    listCities.push(newCity);
+    createCityList();
+    storeCities();
+    $("#citySearch").val("");
+    //displayCityWeather();
+})
+
+
+//click to display the City
+
+$(".listCities").on("click", ".cityButton", displayCityWeather);
+
+
+// Button to clear the city list from local storage
+
+var clear = document.querySelector("#clearCities");
+
+clear.addEventListener("click", function () {
+    localStorage.clear();
+    location.reload();
+});
